@@ -15,6 +15,11 @@ PUT /index_name
 }
 ```
 
+### Get the mapping details from the index
+```js
+GET /index_name/_mapping
+```
+
 ### Add the document to the index
 ```js
 POST /index_name/_doc
@@ -108,4 +113,113 @@ GET /index_name/_search
     }
   }
 }
+```
+
+# Aggregation
+### Basic aggregation
+```js
+GET /index_name/_search
+{
+  "size": 0, 
+  "aggs": {
+    "total_sales": {
+      "sum": {
+        "field": "price"
+      }
+    },
+    "average_sales":{
+      "avg": {
+        "field": "price"
+      }
+    },
+    "min_sales":{
+      "min": {
+        "field": "price"
+      }
+    },
+    "max_sales":{
+      "max": {
+        "field": "price"
+      }
+    }
+  }
+}
+
+// both query are give the same response
+GET /index_name/_search
+{
+  "size": 0,
+  "aggs": {
+    "price_status": {
+      "stats": {
+        "field": "price"
+      }
+    }
+  }
+}
+```
+
+### Get the distinct values
+```js
+GET /index_name/_search
+{
+  "size": 0, 
+  "aggs": {
+    "distinct_values": {
+      "terms": {
+        "field": "name.keyword"
+      }
+    }
+  }
+}
+```
+
+### eturns an array of all unique values that results from applying an expression to each document in a group of documents
+```js
+GET /save_data/_search
+{
+  "size": 0,
+  "query":{  
+      "match": {
+      "organization.keyword": "627cf6467099baa51ec44f5b"
+      }
+    },
+  "aggs": {
+    "id": {
+      "terms": {
+        "field": "name.keyword",
+        "order": {
+          "_key": "desc"
+        }
+      },
+      "aggs": {
+        "commandType": {
+          "terms": {
+            "field": "commandType.keyword"
+          }
+        },
+       "bucket_truncate": {
+          "bucket_sort": {
+            "from": 0,
+            "size": 100
+          }
+        }
+      }
+    },
+    "totalCount": {
+      "cardinality": {
+        "field": "name.keyword"
+      }
+    }
+  }
+}
+// response like
+[{
+  id: 'a',
+  commandType: ['comd-1', 'cmd-2']
+},
+{
+  id: 'b',
+  commandType: ['comd-x', 'cmd-y']
+}]
 ```
